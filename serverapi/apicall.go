@@ -34,8 +34,10 @@ var (
 
 // go build -ldflags "-s -w"
 func init() {
-	CloudHost = "https://34.208.211.74"
-	CloudPort = "10443"
+	CloudHost = "http://34.208.211.74"
+	//
+	// CloudHost = "https://localhost"
+	CloudPort = "8080"
 	BaseUrl = fmt.Sprintf("%s:%s", CloudHost, CloudPort)
 
 	roots := x509.NewCertPool()
@@ -44,7 +46,7 @@ func init() {
 		panic("failed to parse root certificate")
 	}
 	tlsConf = &tls.Config{RootCAs: roots,
-		InsecureSkipVerify: true}
+		InsecureSkipVerify: false}
 
 	transport := &http.Transport{TLSClientConfig: tlsConf}
 
@@ -68,30 +70,17 @@ func ExecQuery(r func(req *request.Request) (*request.Response, error)) (*reques
 		fmt.Println(" httpclient is null ")
 		return nil, nil
 	}
-	req := request.NewRequest(client)
+	tcl := &http.Client{}
+	req := request.NewRequest(tcl)
 	SetHeader(req)
-	reqCnt := 1
-rerun:
 
 	resp, err := r(req)
 	if err != nil {
 		fmt.Println("[REQUEST]", err.Error())
-		if reqCnt < 3 {
-			reqCnt++
-			Connect()
-			goto rerun
-		}
-		resp = &request.Response{}
-		resp.Status = "200"
-		resp.StatusCode = 200
+
 		return resp, []byte("serverError")
 	}
 
-	if resp.StatusCode == 403 && reqCnt < 3 {
-		reqCnt++
-		Connect()
-		goto rerun
-	}
 	var body []byte
 	body = make([]byte, resp.ContentLength)
 
@@ -128,13 +117,22 @@ func Connect() {
 
 func UploadInventory(modelId string, modelName string) {
 	resp, body := ExecQuery(func(req *request.Request) (*request.Response, error) {
-		req.Headers["Content-Type"] = "application/x-www-form-urlencoded;charset=UTF-8"
+		req.Headers["Content-Type"] = "application/x-www-form-urlencoded"
 		params := make(map[string]string)
 		params["modelId"] = modelId
 		params["modelName"] = modelName
-		fmt.Println(">> Send ", BaseUrl+"/v2/manuf/inventory")
-		return req.PostForm(BaseUrl+"/v2/manuf/inventory", params)
+
+		fmt.Println(">> Send ", BaseUrl+"/v2/manuf/inventory/")
+		fmt.Println(" >> ", modelId)
+		fmt.Println(" >> ", modelName)
+		res, err := req.PostForm(BaseUrl+"/v2/manuf/inventory/", params)
+		fmt.Println("<< RECV ", "")
+		if err != nil {
+			fmt.Println("<< RECV ", err.Error())
+		}
+		return res, err
 	})
+	fmt.Printf("<<< Resp   %d ", resp.StatusCode)
 	if resp.StatusCode == 200 {
 		fmt.Println(string(body))
 
