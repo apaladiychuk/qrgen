@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/apaladiychuk/qrgen/serverapi"
 	"github.com/skip2/go-qrcode"
 	"image/jpeg"
 	"image/png"
@@ -24,7 +25,9 @@ func main() {
 	var qrType string
 	if len(os.Args) < 3 {
 		fmt.Println("Wrong argument ")
-		fmt.Printf(`usage  %s "параметры qr"  "полное имя файла"\n `, os.Args[0])
+		fmt.Printf(`usage  %s "параметры qr"  "полное имя файла" `, os.Args[0])
+		fmt.Println(`----------------`)
+		fmt.Println(`Формат данных для Qr `)
 		fmt.Println(`уникальный код#Модель#Верх#Подошва`)
 		return
 	}
@@ -67,6 +70,7 @@ http://www.reckless.me/
 #%s#"
 `,
 		info.ModelName, info.Top, info.Sole, info.ModelId)
+	go serverapi.UploadInventory(info.ModelId, info.ModelName)
 
 	if pngBuff, err := qrcode.Encode(keyString, qrcode.Medium, 256); err != nil {
 		fmt.Errorf("[model] generate ", err.Error())

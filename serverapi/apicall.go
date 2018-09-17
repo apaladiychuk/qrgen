@@ -3,13 +3,9 @@ package serverapi
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/json"
 	"fmt"
 	"github.com/mozillazg/request"
 	"net/http"
-	"strconv"
-	"webapp/controllers"
-	"webapp/models"
 )
 
 var certificate = `-----BEGIN CERTIFICATE-----
@@ -33,11 +29,15 @@ var (
 	sessionId string
 	UserId    string
 	CloudHost string
-	CloudPort int
+	CloudPort string
 )
 
-func Init() {
+// go build -ldflags "-s -w"
+func init() {
+	CloudHost = "https://34.208.211.74"
+	CloudPort = "10443"
 	BaseUrl = fmt.Sprintf("%s:%s", CloudHost, CloudPort)
+
 	roots := x509.NewCertPool()
 	ok := roots.AppendCertsFromPEM([]byte(certificate))
 	if !ok {
@@ -103,27 +103,27 @@ rerun:
 
 // Connect to server
 func Connect() {
-	req := request.NewRequest(client)
-	req.Data = map[string]string{
-		"login":    "manuf",
-		"password": "manuf",
-	}
-	resp, err := req.Post(BaseUrl + "/v1/security/")
-	if err != nil {
-		fmt.Println("POST request ", err.Error())
-	} else {
-		j, err := resp.Json()
-		resp.Body.Close()
-		if err != nil {
-			fmt.Println("JSON conv ", err.Error())
-		} else {
-			sessionId, _ = j.Get("SessionId").String()
-			UserId, _ = j.Get("UserId").String()
-			fmt.Println("JSON ", j)
-			fmt.Println(" session id = ", sessionId)
-			fmt.Println(" user id = ", UserId)
-		}
-	}
+	//req := request.NewRequest(client)
+	//req.Data = map[string]string{
+	//	"login":    "manuf",
+	//	"password": "manuf",
+	//}
+	//resp, err := req.Post(BaseUrl + "/v1/security/")
+	//if err != nil {
+	//	fmt.Println("POST request ", err.Error())
+	//} else {
+	//	j, err := resp.Json()
+	//	resp.Body.Close()
+	//	if err != nil {
+	//		fmt.Println("JSON conv ", err.Error())
+	//	} else {
+	//		sessionId, _ = j.Get("SessionId").String()
+	//		UserId, _ = j.Get("UserId").String()
+	//		fmt.Println("JSON ", j)
+	//		fmt.Println(" session id = ", sessionId)
+	//		fmt.Println(" user id = ", UserId)
+	//	}
+	//}
 }
 
 func UploadInventory(modelId string, modelName string) {
@@ -132,23 +132,18 @@ func UploadInventory(modelId string, modelName string) {
 		params := make(map[string]string)
 		params["modelId"] = modelId
 		params["modelName"] = modelName
-
-		return req.PostForm(BaseUrl+"/v1/manuf/invento", params)
+		fmt.Println(">> Send ", BaseUrl+"/v2/manuf/inventory")
+		return req.PostForm(BaseUrl+"/v2/manuf/inventory", params)
 	})
 	if resp.StatusCode == 200 {
-		var respObj controllers.ImportMutableResponse
-		if err := json.Unmarshal(body, &respObj); err != nil {
-			return err
-		} else {
-			if respObj.Status == models.RESPONSE_OK {
-				return nil
-			} else {
-				return errors.New("[error]" + respObj.Description)
-			}
-		}
+		fmt.Println(string(body))
 
 	} else {
-		return errors.New("web error " + resp.Status)
+		fmt.Printf("<<< ERROR  %d ", resp.StatusCode)
+		fmt.Println("")
+		fmt.Println("<<< ", string(body))
+		// todo Save in temporary file for resend
+
 	}
 
 }
