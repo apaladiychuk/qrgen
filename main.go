@@ -70,7 +70,7 @@ http://www.reckless.me/
 #%s#"
 `,
 		info.ModelName, info.Top, info.Sole, info.ModelId)
-	go serverapi.UploadInventory(info.ModelId, info.ModelName)
+	serverapi.UploadInventory(info.ModelId, info.ModelName)
 
 	if pngBuff, err := qrcode.Encode(keyString, qrcode.Medium, 256); err != nil {
 		fmt.Errorf("[model] generate ", err.Error())
@@ -90,5 +90,5 @@ http://www.reckless.me/
 			}
 		}
 	}
-
+	os.Exit(1)
 }

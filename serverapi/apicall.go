@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/mozillazg/request"
 	"net/http"
+	"time"
 )
 
 var certificate = `-----BEGIN CERTIFICATE-----
@@ -34,10 +35,10 @@ var (
 
 // go build -ldflags "-s -w"
 func init() {
-	CloudHost = "http://34.208.211.74"
+	CloudHost = "https://34.208.211.74"
 	//
 	// CloudHost = "https://localhost"
-	CloudPort = "8080"
+	CloudPort = "10443"
 	BaseUrl = fmt.Sprintf("%s:%s", CloudHost, CloudPort)
 
 	roots := x509.NewCertPool()
@@ -46,12 +47,13 @@ func init() {
 		panic("failed to parse root certificate")
 	}
 	tlsConf = &tls.Config{RootCAs: roots,
-		InsecureSkipVerify: false}
+		InsecureSkipVerify: true}
 
 	transport := &http.Transport{TLSClientConfig: tlsConf}
 
 	client = &http.Client{
 		Transport: transport,
+		Timeout:   10 * time.Second,
 	}
 	Connect()
 }
@@ -70,8 +72,8 @@ func ExecQuery(r func(req *request.Request) (*request.Response, error)) (*reques
 		fmt.Println(" httpclient is null ")
 		return nil, nil
 	}
-	tcl := &http.Client{}
-	req := request.NewRequest(tcl)
+
+	req := request.NewRequest(client)
 	SetHeader(req)
 
 	resp, err := r(req)
