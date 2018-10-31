@@ -68,7 +68,8 @@ func main() {
 	}
 
 	GenerateQr(qrParam, path, qrType)
-
+	serverapi.UploadInventory(qrParam.ModelId, qrParam.ModelName)
+	os.Exit(0)
 }
 
 func GenerateQr(info QrData, path string, qrType string) {
@@ -108,7 +109,5 @@ func GenerateQr(info QrData, path string, qrType string) {
 			}
 		}
 	}
-	serverapi.UploadInventory(info.ModelId, info.ModelName)
 
-	os.Exit(0)
 }
