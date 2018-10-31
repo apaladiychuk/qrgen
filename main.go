@@ -12,6 +12,7 @@ import (
 )
 
 type QrData struct {
+	BrandName string
 	ModelId   string
 	ModelName string
 	Top       string
@@ -28,7 +29,7 @@ func main() {
 		fmt.Printf(`usage  %s "параметры qr"  "полное имя файла" `, os.Args[0])
 		fmt.Println(`----------------`)
 		fmt.Println(`Формат данных для Qr `)
-		fmt.Println(`уникальный код#Модель#Верх#Подошва`)
+		fmt.Println(`название бренда#уникальный код#Модель#Верх#Подошва`)
 		return
 	}
 	paramString = os.Args[1]
@@ -47,12 +48,23 @@ func main() {
 		fmt.Errorf("неправильный формат Qr ")
 		return
 	}
-
-	qrParam := QrData{
-		ModelId:   paramArr[0],
-		ModelName: paramArr[1],
-		Top:       paramArr[2],
-		Sole:      paramArr[3],
+	var qrParam QrData
+	if len(paramArr) < 5 {
+		qrParam = QrData{
+			ModelId:   paramArr[0],
+			ModelName: paramArr[1],
+			Top:       paramArr[2],
+			Sole:      paramArr[3],
+			BrandName: "Reckless",
+		}
+	} else {
+		qrParam = QrData{
+			BrandName: paramArr[0],
+			ModelId:   paramArr[1],
+			ModelName: paramArr[2],
+			Top:       paramArr[3],
+			Sole:      paramArr[4],
+		}
 	}
 
 	GenerateQr(qrParam, path, qrType)
@@ -61,15 +73,21 @@ func main() {
 
 func GenerateQr(info QrData, path string, qrType string) {
 
+	var url string
+	if info.BrandName == "Reckless" {
+		url = "http://www.reckless.me/"
+	} else {
+		url = "http://esente.com.ua/"
+	}
 	keyString := fmt.Sprintf(
-		`Reckless 
+		`%s 
 Модель: %s 
 Верх: %s
 Подошва: %s
-http://www.reckless.me/
-#%s#"
+%s
+#%s#
 `,
-		info.ModelName, info.Top, info.Sole, info.ModelId)
+		info.BrandName, info.ModelName, info.Top, info.Sole, url, info.ModelId)
 
 	if pngBuff, err := qrcode.Encode(keyString, qrcode.Medium, 256); err != nil {
 		fmt.Errorf("[model] generate ", err.Error())
@@ -90,8 +108,7 @@ http://www.reckless.me/
 			}
 		}
 	}
-
 	serverapi.UploadInventory(info.ModelId, info.ModelName)
 
-	os.Exit(1)
+	os.Exit(0)
 }
