@@ -125,10 +125,7 @@ func UploadInventory(modelId string, modelName string) {
 		params["modelName"] = modelName
 
 		fmt.Println(">> Send ", BaseUrl+"/v2/manuf/inventory/")
-		fmt.Println(" >> ", modelId)
-		fmt.Println(" >> ", modelName)
 		res, err := req.PostForm(BaseUrl+"/v2/manuf/inventory/", params)
-		fmt.Println("<< RECV ", "")
 		if err != nil {
 			fmt.Println("<< RECV ", err.Error())
 		}

@@ -70,7 +70,6 @@ http://www.reckless.me/
 #%s#"
 `,
 		info.ModelName, info.Top, info.Sole, info.ModelId)
-	serverapi.UploadInventory(info.ModelId, info.ModelName)
 
 	if pngBuff, err := qrcode.Encode(keyString, qrcode.Medium, 256); err != nil {
 		fmt.Errorf("[model] generate ", err.Error())
@@ -87,8 +86,12 @@ http://www.reckless.me/
 				if err := jpeg.Encode(outFile, jpg, &jpeg.Options{Quality: 100}); err != nil {
 					fmt.Errorf("jpeg to butes  ", err.Error())
 				}
+				fmt.Println("Qr generate complete")
 			}
 		}
 	}
+
+	serverapi.UploadInventory(info.ModelId, info.ModelName)
+
 	os.Exit(1)
 }
